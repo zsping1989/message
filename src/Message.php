@@ -21,11 +21,11 @@ trait Message{
      * @param $subject
      * @param $content
      */
-    public function sendMessage($to,$tpl,$content='',$subject=''){
+    public function sendMessage($tpl,$data=[]){
         //消息对象组装
-        $info =  new MessageInfo($this->id,$to,$tpl);
-        $info->setSubject($subject);
-        $info->setContent($content);
+        $info =  new MessageInfo($this->id,$data['user_id'],$tpl);
+        $info->setSubject($data['subject']);
+        $info->setContent($data['content']);
         Msg::send($info);
 
 

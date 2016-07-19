@@ -22,7 +22,7 @@ class Msgtpl extends Model
 
     //消息模板-用户消息
     public function messges(){
-
+        return $this->hasMany('Message\Models\Message');
     }
   
   }

@@ -38,6 +38,8 @@ class MessageInfo implements \Message\Contracts\MessageInfo{
      */
     public $to = 0;
 
+    public $url = '';
+
     protected $tpl;
 
     /**
@@ -67,6 +69,10 @@ class MessageInfo implements \Message\Contracts\MessageInfo{
         $this->subject = $subject;
     }
 
+    public function setUrl($url){
+        $this->url = $url;
+    }
+
     public function toArray(){
         $tpl = $this->tpl ? Msgtpl::where('name','=',$this->tpl)->first() : Msgtpl::find(1);
         $subject = $this->subject ? $this->subject : $tpl->title;
@@ -75,6 +81,7 @@ class MessageInfo implements \Message\Contracts\MessageInfo{
             'from_id'=>$this->from,
             'msgtpl_id'=> $tpl->id ? $tpl->id : 0,
             'subject'=>$subject,
+            'url'=>$this->url,
             'content'=>$this->content
         ];
     }

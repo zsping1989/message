@@ -12,7 +12,7 @@ class Message extends Model
 
 
     //批量赋值白名单
-    protected $fillable = ['id','user_id','from_id','msgtpl_id','subject','content','read'];
+    protected $fillable = ['id','user_id','from_id','msgtpl_id','subject','url','content','read'];
     //输出隐藏字段
     protected $hidden = [];
     //日期字段
@@ -25,7 +25,7 @@ class Message extends Model
 
     //用户消息-消息模板
     public function msgtpl(){
-
+        return $this->belongsTo('Message\Models\Msgtpl');
     }
   
   }
