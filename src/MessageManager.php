@@ -63,16 +63,47 @@ class MessageManager implements Msg{
     }
 
     public function getAllNotReadLimit($user_id,$msgtpl,$limit=3){
-        $result = $this->msgtplModel->where('name','=',$msgtpl)->first();
-        $result->messages = $this->messageModel->where('user_id','=',$user_id)
+        if(!is_array($msgtpl)){
+            $msgtpl = [$msgtpl];
+        }
+        $msgtpls = $this->msgtplModel->whereIn('name',$msgtpl)->get();
+        $msgtplModel = $this->msgtplModel->where('id','<',0);
+        //获取所有子节点
+        foreach($msgtpls as $item){
+            $msgtplModel = $msgtplModel->orWhere(function($query) use ($item){
+                $query->where('left_margin','>=',$item->left_margin)
+                    ->where('right_margin','<=',$item->right_margin);
+            });
+        }
+        $msgtpls = $msgtplModel->get();
+        $msgtplsArr = collect($msgtpls->toArray())->keyBy('id');
+
+        //获取未读消息
+        $messages = collect($this->messageModel->where('user_id','=',$user_id)
             ->where('read','=',0)
-            ->where('msgtpl_id','=',$result->id)
+            ->whereIn('msgtpl_id',$msgtplsArr->pluck('id'))
             ->orderBy('created_at','desc')
-            ->paginate($limit);
-        $result->messages->each(function($item){
-            $item->format_time = Carbon::createFromFormat('Y-m-d H:i:s',$item->created_at)->diffForHumans();
-        });
-        return $result;
+            ->get()
+            ->toArray())
+            ->map(function($item){
+                $item['format_time'] = Carbon::createFromFormat('Y-m-d H:i:s',$item['created_at'])->diffForHumans();
+                return $item;
+            });
+
+        $msgtplsArr = $msgtplsArr->toArray();
+        $result = [];
+        foreach($msgtpls as $row){
+            if(in_array($row->name,$msgtpl)){
+                $row_messages = $messages->filter(function($item) use ($row,$msgtplsArr){
+                    return $msgtplsArr[$item['msgtpl_id']]['left_margin']>=$row->left_margin &&
+                    $msgtplsArr[$item['msgtpl_id']]['right_margin']<=$row->right_margin;
+                });
+                $row->msg_count = $row_messages->count();
+                $row->messages  = $row_messages->splice(0,$limit)->toArray();
+                $result[] = $row;
+            }
+        }
+        return collect($result);
     }
 
 }
