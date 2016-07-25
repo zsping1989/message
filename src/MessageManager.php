@@ -62,6 +62,7 @@ class MessageManager implements Msg{
 
     }
 
+
     public function getAllNotReadLimit($user_id,$msgtpl,$limit=3){
         if(!is_array($msgtpl)){
             $msgtpl = [$msgtpl];
@@ -111,7 +112,11 @@ class MessageManager implements Msg{
      * param $msgtpl
      * 返回: array
      */
-    public function getCountNotReadByMsgtpl($msgtpl){
+    public function getCountNotReadByMsgtpl($user_id,$msgtpl){
+        if(!is_array($msgtpl)){
+            $msgtpl = [$msgtpl];
+        }
+
         return array();
     }
 
