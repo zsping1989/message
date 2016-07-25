@@ -106,4 +106,13 @@ class MessageManager implements Msg{
         return collect($result);
     }
 
+    /**
+     * 统计分类组的未读消息条数
+     * param $msgtpl
+     * 返回: array
+     */
+    public function getCountNotReadByMsgtpl($msgtpl){
+        return array();
+    }
+
 }

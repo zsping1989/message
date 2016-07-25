@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Message extends Model
 {
+
     protected $table = 'messages'; //数据表名称
 
 
@@ -27,5 +28,21 @@ class Message extends Model
     public function msgtpl(){
         return $this->belongsTo('Message\Models\Msgtpl');
     }
-  
+
+    //查询条件筛选
+    public function scopeOptions($query,array $options=[])
+    {
+        //条件筛选
+        collect($options['where'])->each(function($item,$key) use(&$query){
+            $val = $item->exp=='like' ? '%'.preg_replace('/([_%])/','\\\$1', $item->val).'%' : $item->val;
+            $item and $query->where($item->key,$item->exp,$val);
+        });
+        //排序
+        collect($options['order'])->each(function($item,$key) use (&$query){
+            $item and $query->orderBy($key,$item);
+        });
+        return $query;
+    }
+
+
   }
