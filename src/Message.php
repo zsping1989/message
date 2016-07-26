@@ -26,10 +26,7 @@ trait Message{
         $info =  new MessageInfo($this->id,$data['user_id'],$tpl);
         $info->setSubject($data['subject']);
         $info->setContent($data['content']);
-        Msg::send($info);
-
-
-
+        return Msg::send($info);
     }
 
 
