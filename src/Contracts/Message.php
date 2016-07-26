@@ -38,5 +38,5 @@ interface Message{
      * @param null $msgtpl_id
      * 返回: mixed
      */
-    public function getAllNotRead($user_id,$msgtpl_id=null);
+    public function getAllNotRead($user_id,$msgtpl=null);
 }
