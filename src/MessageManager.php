@@ -9,6 +9,7 @@
 namespace Message;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Message\Contracts\Message as Msg;
 use Message\Contracts\MessageInfo as MsgInfo;
 use Message\Models\Message as MessageModel;
@@ -42,7 +43,7 @@ class MessageManager implements Msg
     public function readOne($id)
     {
         $row = $this->messageModel->find($id);
-        $this->messageModel->where('id', '=', $row->id)->update(['read' => 1]);
+        $this->messageModel->where('id', '=', $row->id)->where('read','=',0)->update(['read' => 1]);
         return $row;
     }
 
@@ -153,21 +154,25 @@ class MessageManager implements Msg
         }
         $msgtplsArr = collect($msgtpls->toArray())->keyBy('id');
 
-        //获取未读消息
-        $messages = collect($this->selectNotRead($user_id, true, collect($msgtpls->toArray())->pluck('id'))->toArray());
-        $msgtplsArr = $msgtplsArr->toArray();
-        $result = [];
-        foreach ($msgtpls as $row) {
-            if (in_array($row->name, $msgtpl)) {
-                $row_messages = $messages->filter(function ($item) use ($row, $msgtplsArr) {
-                    return $msgtplsArr[$item['msgtpl_id']]['left_margin'] >= $row->left_margin &&
-                    $msgtplsArr[$item['msgtpl_id']]['right_margin'] <= $row->right_margin;
-                });
-                $row->msg_count = $row_messages->count();
-                $result[] = $row;
+        //统计未读消息
+        $msgtplCount = $this->messageModel
+            ->select(DB::raw('msgtpl_id,count(*) as msg_count'))
+            ->whereIn('msgtpl_id', $msgtplsArr->pluck('id'))
+            ->where('user_id','=',$user_id)
+            ->groupBy('msgtpl_id')
+            ->get()->toArray();
+        return $msgtpls->filter(function($item) use ($msgtpl){
+            return in_array($item->name, $msgtpl);
+        })->each(function($item) use ($msgtplCount,$msgtplsArr){
+            $count = 0;
+            foreach($msgtplCount as $row){
+                if($item->left_margin<=$msgtplsArr[$row['msgtpl_id']]['left_margin'] && $item->right_margin>=$msgtplsArr[$row['msgtpl_id']]['right_margin']){
+                    $count += $row['msg_count'];
+                }
             }
-        }
-        return collect($result);
+            $item->msg_count = $count;
+        });
+
     }
 
 }
