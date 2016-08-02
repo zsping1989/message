@@ -159,6 +159,7 @@ class MessageManager implements Msg
             ->select(DB::raw('msgtpl_id,count(*) as msg_count'))
             ->whereIn('msgtpl_id', $msgtplsArr->pluck('id'))
             ->where('user_id','=',$user_id)
+            ->where('read','=',0)
             ->groupBy('msgtpl_id')
             ->get()->toArray();
         return $msgtpls->filter(function($item) use ($msgtpl){
@@ -170,9 +171,19 @@ class MessageManager implements Msg
                     $count += $row['msg_count'];
                 }
             }
+            $item->childs = $item->childs(1)->implode('id',',');
             $item->msg_count = $count;
         });
 
+    }
+
+    /**
+     * 修改成已读状态
+     * @param $ids
+     * 返回: mixed
+     */
+    public function updateReadByIds($ids){
+        return $this->messageModel->whereIn('id',$ids)->where('read','=',0)->update(['read' => 1]);
     }
 
 }
